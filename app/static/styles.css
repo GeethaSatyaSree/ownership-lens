@@ -1,0 +1,21 @@
+/* Small additions on top of Tailwind: the top loading bar and table rhythm. */
+#progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background: #4f46e5;
+  transition: width 0.3s ease;
+  z-index: 50;
+}
+#progress.active { width: 90%; }
+
+.chain-step::after {
+  content: "→";
+  margin: 0 0.5rem;
+  color: #94a3b8;
+}
+.chain-step:last-child::after { content: ""; margin: 0; }
+
+table tbody tr:nth-child(even) { background-color: #f8fafc; }

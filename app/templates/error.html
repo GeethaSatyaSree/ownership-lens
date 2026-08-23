@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Something went wrong · {{ app_name }}{% endblock %}
+{% block content %}
+
+<div class="max-w-lg mx-auto text-center py-16">
+  <div class="text-4xl mb-4">⚠️</div>
+  <h1 class="text-2xl font-semibold text-slate-900">We couldn't load that</h1>
+  <p class="mt-3 text-slate-600 text-sm leading-relaxed">{{ message }}</p>
+  <div class="mt-8 flex gap-3 justify-center">
+    <a href="/" class="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white
+                       hover:bg-indigo-700 transition">Back to search</a>
+    <a href="/health" class="rounded-lg border border-slate-300 px-5 py-2.5 text-sm
+                             font-medium text-slate-700 hover:bg-slate-100 transition">
+      Check database status</a>
+  </div>
+</div>
+
+{% endblock %}

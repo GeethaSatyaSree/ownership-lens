@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+  <div id="progress"></div>
+
+  <header class="bg-slate-900 text-white">
+    <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2">
+        <span class="text-lg font-semibold tracking-tight">{{ app_name }}</span>
+        <span class="text-xs text-slate-400 hidden sm:inline">corporate ownership explorer</span>
+      </a>
+      <nav class="flex items-center gap-5 text-sm">
+        <a href="/" class="hover:text-indigo-300">Search</a>
+        <a href="/insights" class="hover:text-indigo-300">Insights</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-6 py-10">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="max-w-5xl mx-auto px-6 py-10 text-xs text-slate-400 border-t border-slate-200 mt-10">
+    Fictional data. Built on CognoDB via the official Neo4j Bolt driver.
+  </footer>
+
+  <script>
+    // Server-rendered pages have no client fetch, so show the progress bar on
+    // navigation instead - the user gets feedback while a traversal runs.
+    const bar = document.getElementById('progress');
+    document.addEventListener('click', e => {
+      const link = e.target.closest('a[href^="/"]');
+      if (link) bar.classList.add('active');
+    });
+    document.addEventListener('submit', () => bar.classList.add('active'));
+    window.addEventListener('pageshow', () => bar.classList.remove('active'));
+  </script>
+</body>
+</html>

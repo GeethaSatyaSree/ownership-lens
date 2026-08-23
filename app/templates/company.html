@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}{{ company.name }} · {{ app_name }}{% endblock %}
+{% block content %}
+
+<div class="mb-8">
+  <a href="/" class="text-xs text-slate-500 hover:text-indigo-600">← Search</a>
+  <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{{ company.name }}</h1>
+  <div class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-slate-600">
+    <span>{{ company.jurisdiction }}</span>
+    <span>Incorporated {{ company.incorporated }}</span>
+    <span>{{ company.sector }}</span>
+    <span class="{{ 'text-emerald-700' if company.status == 'Active' else 'text-slate-400' }}">
+      {{ company.status }}</span>
+  </div>
+  {% if company.address_line %}
+  <a href="/address/{{ company.address_id }}"
+     class="mt-2 inline-block text-sm text-indigo-600 hover:underline">
+    {{ company.address_line }}, {{ company.address_city }}, {{ company.address_country }}
+  </a>
+  {% endif %}
+</div>
+
+{% if flagged %}
+<div class="mb-8 rounded-xl border border-amber-300 bg-amber-50 p-5">
+  <p class="text-sm font-semibold text-amber-900">
+    {{ flagged|length }} beneficial owner{{ '' if flagged|length == 1 else 's' }}
+    above the {{ threshold|int }}% disclosure threshold
+  </p>
+  <p class="mt-1 text-sm text-amber-800">
+    {% for f in flagged %}{{ f.name }} ({{ "%.2f"|format(f.effective_pct) }}%){% if not loop.last %}, {% endif %}{% endfor %}
+    — not visible in the direct shareholder list below.
+  </p>
+</div>
+{% endif %}
+
+<!-- Direct shareholders -->
+<section class="mb-10">
+  <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-3">
+    Direct shareholders
+  </h2>
+  {% if owners %}
+  <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+        <tr><th class="text-left px-5 py-3">Shareholder</th>
+            <th class="text-left px-5 py-3">Type</th>
+            <th class="text-right px-5 py-3">Stake</th>
+            <th class="text-right px-5 py-3">Since</th></tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for o in owners %}
+        <tr>
+          <td class="px-5 py-3">
+            <a href="{{ '/company/' ~ o.owner_id if o.owner_type == 'Company' else '/person/' ~ o.owner_id }}"
+               class="text-indigo-600 hover:underline">{{ o.name }}</a>
+          </td>
+          <td class="px-5 py-3 text-slate-500">{{ o.owner_type }}</td>
+          <td class="px-5 py-3 text-right font-medium">{{ "%.1f"|format(o.pct) }}%</td>
+          <td class="px-5 py-3 text-right text-slate-500">{{ o.since }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-sm text-slate-500 bg-white border border-slate-200 rounded-xl p-6">
+    No shareholders recorded for this company.</p>
+  {% endif %}
+</section>
+
+<!-- Ultimate beneficial owners: the multi-hop result -->
+<section class="mb-10">
+  <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-1">
+    Ultimate beneficial owners
+  </h2>
+  <p class="text-xs text-slate-500 mb-3">
+    Every natural person reachable through the ownership chain, with their stake
+    multiplied along each path.
+  </p>
+  {% if ubos %}
+  <div class="space-y-3">
+    {% for u in ubos %}
+    <div class="bg-white border rounded-xl p-5
+                {{ 'border-amber-300' if u.effective_pct >= threshold else 'border-slate-200' }}">
+      <div class="flex items-baseline justify-between">
+        <a href="/person/{{ u.person_id }}" class="font-medium text-indigo-600 hover:underline">
+          {{ u.name }}</a>
+        <div class="text-right">
+          <span class="text-lg font-semibold text-slate-900">{{ "%.2f"|format(u.effective_pct) }}%</span>
+          {% if u.effective_pct >= threshold %}
+          <span class="ml-2 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+            above threshold</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="text-xs text-slate-500 mt-0.5">{{ u.nationality }}</div>
+      {% for p in u.paths %}
+      <div class="mt-3 pt-3 border-t border-slate-100 text-xs">
+        <div class="flex flex-wrap items-center text-slate-600">
+          {% for step in p.chain %}<span class="chain-step">{{ step }}</span>{% endfor %}
+        </div>
+        <div class="mt-1 text-slate-400">
+          {{ p.hops }} hop{{ '' if p.hops == 1 else 's' }} ·
+          contributes {{ "%.2f"|format(p.pct) }}%
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-sm text-slate-500 bg-white border border-slate-200 rounded-xl p-6">
+    No individual owners could be traced from this company.</p>
+  {% endif %}
+</section>
+
+<!-- Directors -->
+<section class="mb-10">
+  <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-3">Directors</h2>
+  {% if directors %}
+  <div class="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100">
+    {% for d in directors %}
+    <div class="flex items-center justify-between px-5 py-3 text-sm">
+      <a href="/person/{{ d.person_id }}" class="text-indigo-600 hover:underline">{{ d.name }}</a>
+      <span class="text-slate-500">{{ d.role }} · since {{ d.since }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-sm text-slate-500 bg-white border border-slate-200 rounded-xl p-6">
+    No directors recorded.</p>
+  {% endif %}
+</section>
+
+<!-- Subsidiaries -->
+{% if subsidiaries %}
+<section>
+  <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-3">
+    Companies controlled downstream
+  </h2>
+  <div class="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100">
+    {% for s in subsidiaries %}
+    <div class="flex items-center justify-between px-5 py-3 text-sm">
+      <a href="/company/{{ s.id }}" class="text-indigo-600 hover:underline">{{ s.name }}</a>
+      <span class="text-slate-500">
+        {{ "%.2f"|format(s.effective_pct) }}% · {{ s.hops }} hop{{ '' if s.hops == 1 else 's' }}
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ person.name }} · {{ app_name }}{% endblock %}
+{% block content %}
+
+<div class="mb-8">
+  <a href="/" class="text-xs text-slate-500 hover:text-indigo-600">← Search</a>
+  <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{{ person.name }}</h1>
+  <div class="mt-2 text-sm text-slate-600">
+    {{ person.nationality }}{% if person.born %} · born {{ person.born }}{% endif %}
+  </div>
+</div>
+
+<section class="mb-10">
+  <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-1">
+    Control footprint
+  </h2>
+  <p class="text-xs text-slate-500 mb-3">
+    Companies this person holds a stake in, directly or through any chain of companies.
+  </p>
+  {% if holdings %}
+  <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+        <tr><th class="text-left px-5 py-3">Company</th>
+            <th class="text-left px-5 py-3">Jurisdiction</th>
+            <th class="text-right px-5 py-3">Effective stake</th>
+            <th class="text-right px-5 py-3">Distance</th></tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for h in holdings %}
+        <tr>
+          <td class="px-5 py-3">
+            <a href="/company/{{ h.id }}" class="text-indigo-600 hover:underline">{{ h.name }}</a>
+          </td>
+          <td class="px-5 py-3 text-slate-500">{{ h.jurisdiction }}</td>
+          <td class="px-5 py-3 text-right font-medium
+                     {{ 'text-amber-700' if h.effective_pct >= threshold else '' }}">
+            {{ "%.2f"|format(h.effective_pct) }}%</td>
+          <td class="px-5 py-3 text-right text-slate-500">
+            {{ h.hops }} hop{{ '' if h.hops == 1 else 's' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-sm text-slate-500 bg-white border border-slate-200 rounded-xl p-6">
+    This person holds no recorded shareholdings.</p>
+  {% endif %}
+</section>
+
+<section>
+  <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-3">
+    Directorships
+  </h2>
+  {% if directorships %}
+  <div class="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100">
+    {% for d in directorships %}
+    <div class="flex items-center justify-between px-5 py-3 text-sm">
+      <a href="/company/{{ d.company_id }}" class="text-indigo-600 hover:underline">{{ d.name }}</a>
+      <span class="text-slate-500">{{ d.role }} · {{ d.jurisdiction }} · since {{ d.since }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-sm text-slate-500 bg-white border border-slate-200 rounded-xl p-6">
+    No directorships recorded.</p>
+  {% endif %}
+</section>
+
+{% endblock %}
